@@ -1,0 +1,334 @@
+#lang eopl
+
+#|-------------------------------------------------------------------------------
+ | Name: Marguerite Sutedjo
+ | Pledge: I pledge my honor that I have abided by the Stevens Honor System.
+ |-------------------------------------------------------------------------------|#
+
+#| Some reminders:
+ |   Each progamming assignment must be completed individually.
+ |   If your code does not compile, you will receive a 0.
+ |   Before submitting your code, try test cases on every function
+ |     to make sure that they run.
+ |   If one of your functions is breaking the whole program due to an error,
+ |     you are better off commenting out the body of that function
+ |     than submitting code that doesn't run.
+ |   Do not modify or delete any function headers.
+ |#
+
+
+#|-------------------------------------------------------------------------------|
+ |                            Lab 2: Lists (20 PTS)                              |
+ |-------------------------------------------------------------------------------|#
+
+#| This lab serves as an introduction to working with lists in Racket.
+ | All lists in Racket are linked lists,
+ |   meaning lists are either null [empty],
+ |   or a pair of a head [the first element]
+ |   and a tail [the rest of the list].
+ | This means you can only directly access the first element of a list.
+ | To access subsequent elements, you have to repeatedly access tails.
+ |
+ | Racket has the tick operator ' which is a shorthand for the "quote" function.
+ | The tick operator tells the Racket interpreter to treat an expression as a literal
+ |   rather than try to evaluate it.
+ | By quoting a sequence of things in parentheses, a list is produced.
+ | For example, (quote (+ 1 2)), or equivalently '(+ 1 2),
+ |   will yield the list (+ 1 2), rather than 3.
+ | When you quote a list, it quotes each sub-expression in the list,
+ |   allowing you to create nested lists with just one tick mark.
+ |#
+
+#| The foundational building block of every list is the empty list,
+ |   which is expressed in the following ways (the first is most common):
+ |   '()
+ |   empty
+ |   (list)
+ |
+ | To construct a list of multiple values, use the "list" function.
+ |   (list 1 2 3) -> (1 2 3)
+ |   (list (+ 1 2)) -> (3)     <- notice how this differs from (quote (+ 1 2))
+ |   (list 'a 'b) -> (a b)     <- '(a b) produces the same result
+ |#
+
+#| Here are some useful built-in list functions, where L is a list and E is some element:
+ | (null? L) returns #t if L is empty, otherwise #f.
+ | (length L) returns the number of elements in L.
+ | (reverse L) returns L in reverse order.
+ | (cons E L) returns L with E added to the front of the list.
+ | (append L1 L2) returns a list of L1 followed by L2.
+ | (car L) returns the first element of L. It throws an exception when given an empty list.
+ | (cdr L) returns the tail [everything but the first element] of L. It throws an exception when given an empty list.
+ |
+ | You may not need all of these functions for this lab, but they may be useful in the future.
+ |#
+
+
+
+
+#|-------------------------------------------------------------------------------|
+ |                     Part 1: List Manipulation (10 PTS)                        |
+ |-------------------------------------------------------------------------------|#
+
+
+#| Implement "name" to accept a first and last name,
+ |   and return a list of the first and last name.
+ | Example:
+ |   (name "Sandeep" "Bhatt") -> ("Sandeep" "Bhatt")
+ |#
+
+;; Type signature: (name string string) -> (string string)
+;; 1 PTS
+(define (name first last)
+  (list first last))
+
+
+
+
+#| Implement "last-name" to accept a list of a first and last name
+ |   [like those constructed by the "name" function] and return the last name.
+ | Example:
+ |   (last-name '("Sandeep" "Bhatt"))    -> "Bhatt"
+ |   (last-name (name "Jared" "Pincus")) -> "Pincus"
+ |#
+
+;; Type signature: (last-name (string string)) -> string
+;; 1 PTS
+(define (last-name name)
+  (cdr name))
+;;no parenthesis -1 should just be cdr name
+
+
+
+#| Implement "yoda" to take a three-part sentence [as a list]
+ |   and return the sentence in Yoda-speak.
+ | In other words, (w1 w2 w3) becomes (w3 w1 w2).
+ | You may assume the input list has exactly 3 elements.
+ |
+ | Examples:
+ |   (yoda '(I love Racket))                  -> (Racket I love)
+ |   (yoda '(You are strong-with-the-force))  -> (strong-with-the-force You are)
+ |   (yoda '(Sandeep-Bhatt has a-shiny-head)) -> (a-shiny-head Sandeep-Bhatt has)
+ |#
+
+;; Type signature: (yoda 3-element-list) -> 3-element-list
+;; 2 PTS
+(define (yoda words)
+  (cons (car (cdr (cdr words))) (list (car words) (car (cdr words)))))
+
+
+
+
+#| Implement "pig-latin" to accept a word as a list of characters
+ |   and return that word following the rules of Pig Latin.
+ | You translate a word into Pig Latin by relocating the first letter
+ |   to the end of the word, then adding the suffix "ay".
+ | The experienced Pig Latin speakers among you will know that sometimes
+ |   you have to move more than one letter from the front of the word to the end,
+ |   but here we'll ignore that rule. You merely need to move the first letter.
+ | You may assume that the input word is at least one letter long.
+ |
+ | Examples:
+ |   (pig-latin '(h a p p y))       -> (a p p y h a y)
+ |   (pig-latin '(b i r t h d a y)) -> (i r t h d a y b a y)
+ |   (pig-latin '(t r u e))         -> (r u e t a y)
+ |#
+
+;; Type signature: (pig-latin list) -> list
+;; 3 PTS
+(define (pig-latin word)
+   (append (cdr word) (cons (car word) (list 'a 'y))))
+
+
+
+
+#| Implement "quad-roots" to accept integers a, b, and c,
+ |   and return the two roots of the quadratic a*x^2 + b*x + c.
+ | As a refresher, the two roots are equal to
+ |   (-b ± sqrt(b^2 - 4*a*c)) / (2*a).
+ | Format the function's output as a list of
+ |   the root produced with minus, followed by
+ |   the root produced with plus.
+ |
+ | While Racket does have support for complex numbers,
+ |   you may assume that the roots of the input quadratic
+ |   will not include imaginary components.
+ | You may also assume that a ≠ 0.
+ | Your output for the provided test cases may not exactly match
+ |   the provided output. For example, decimals may be represented in fractional form.
+ | As long as the values are equivalent mathematically, then your output is correct.
+ |
+ | Subdefinitions may help to make this function much cleaner!
+ |
+ | Examples:
+ |   (quad-roots -3 0 0)    -> (0 0)
+ |   (quad-roots 2 0 -2)    -> (-1 1)
+ |   (quad-roots -3 15 -18) -> (3 2)
+ |   (quad-roots 8 6 -5)    -> (-1.25 0.5)
+ |   (quad-roots 1 -1 -1)   -> (-0.618... 1.618...)
+ |   (quad-roots -5 2 2)    -> (0.863... -0.463...)
+ |#
+
+;; Type signature: (quad-roots nonzero-int int int) -> (real-number real-number)
+;; 3 PTS
+(define (quad-roots a b c)
+  (append (list (/ (- (- b)  (sqrt (- (* b b) (* 4 a c)))) (* 2 a))) (list (/ (+ (- b) (sqrt (- (* b b) (* 4 a c)))) (* 2 a)))))
+
+
+
+
+#|-------------------------------------------------------------------------------|
+ |                       Part 2: Nested Lists (10 PTS)                           |
+ |-------------------------------------------------------------------------------|#
+
+
+#| Implement "rotate" to accept an xy-coordinate c
+ |   and return a list of the four rotations of c around the origin.
+ | These rotations should be in the order 0°, 90° clockwise, 180°, 270° clockwise.
+ | As a refresher, the 90° clockwise rotation of
+ |   an arbitrary coordinate (x,y) is (y,-x).
+ | Consider using subdefinitions to avoid repeatedly accessing the components of c.
+ |
+ | Examples:
+ |   (rotate '(0 1))  -> ((0 1) (1 0) (0 -1) (-1 0))
+ |   (rotate '(2 3))  -> ((2 3) (3 -2) (-2 -3) (-3 2))
+ |   (rotate '(-5 7)) -> ((-5 7) (7 5) (5 -7) (-7 -5))
+ |#
+
+;; Type signature: (rotate (int int)) -> ((int int) (int int) (int int) (int int))
+;; 2 PTS
+(define (rotate c)
+  (append (list c) (list (append (cdr c) (list (- (car  c))))) (list(list (- (car c)) (-(car (reverse c))))) (list (append (list (-( car (cdr c)))) (list (car c))))))
+        
+
+
+
+#| For the remaining functions in this lab, we'll be working with
+ |   an informally defined data structure called a "business".
+ | A business is represented by a nested list with the following structure:
+ |#
+(define business
+  '((tax-id industry)
+    (ceo-name founder-name)
+    (founding-day founding-month founding-year)
+    (website ((stock-ticker) (stock-exchange)) num_employees)
+    ((number street) (city state zip))
+    (product1 product1 ... productn)))
+
+
+;; Here are two example businesses for testing your functions:
+
+(define busn1
+  '((12345 "Software Development")
+    ("Satya Nadella" "Bill Gates")
+    (4 "April" 1975)
+    ("Microsoft.com" (("MSFT") ("Nasdaq")) 182268)
+    ((1 "Microsoft Way") ("Redmond" "WA" "98052"))
+    ("Windows" "Office" "Xbox" "Bing")))
+
+(define busn2
+  '((10101010101 "Automotive")
+    ("Jim Farley" "Henry Ford")
+    (16 "June" 1903)
+    ("Ford.com" (("F") ("NYSE")) 104731)
+    ((1 "American Road") ("Dearborn" "MI" "104731"))
+    ("Mustang" "Shelby" "Bronco" "F-150" "F-250")))
+
+;; Here's an example function which returns the entire founding date of a business:
+
+(define (get-founding-date business)
+  (car (cdr (cdr business))))
+
+#| Since the founding date is the third element in the business list, we can access it
+ |   by dropping the first two elements (by using cdr twice),
+ |   then using car to get the first remaining element.
+ |
+ | Racket has extra functions for shorthands of nesting car and cdr,
+ |   so the body of get-founding-date could equivalently be written as (caddr business).
+ | A shorthand function exists for every permutation of up to 4 car's and cdr's. Here they all are:
+ |    https://docs.racket-lang.org/reference/pairs.html#%28part._.Pair_.Accessor_.Shorthands%29
+ |#
+
+
+
+
+;; Now implement the following functions for accessing parts of the business datatype:
+
+
+#| "get-tax-id" returns the tax-id field.
+ | Examples:
+ |   (get-tax-id busn1) -> 12345
+ |   (get-tax-id busn2) -> 10101010101
+ |#
+
+;; Type signature: (get-tax-id business) -> tax-id
+;; 1 PTS
+(define (get-tax-id b)
+  (car (car b)))
+
+
+
+
+#| "get-address" returns the fields which make up the address.
+ | Examples:
+ |   (get-address busn1) -> ((1 "Microsoft Way") ("Redmond" "WA" "98052"))
+ |   (get-address busn2) -> ((1 "American Road") ("Dearborn" "MI" "104731"))
+ |#
+
+;; Type signature: (get-address business) -> ((number street) (city state zip))
+;; 1 PTS
+(define (get-address b)
+  (car(cdr(reverse b))))
+
+
+
+
+#| "get-employees" returns the num-employees field.
+ | Examples:
+ |   (get-employees busn1) -> 182268
+ |   (get-employees busn2) -> 104731
+ |#
+
+;; Type signature: (get-employees business) -> num-employees
+;; 1 PTS
+(define (get-employees b)
+  (car(reverse(car(cdr(cdr(cdr b)))))))
+
+
+
+
+#| "get-streetname" returns the state field.
+ | Consider taking advantage of another function you already wrote
+ |   for implementing this one!
+ | Examples:
+ |   (get-streetname busn1) -> "Microsoft Way"
+ |   (get-streetname busn2) -> "American Road"
+ |#
+
+;; Type signature: (get-streetname business) -> street
+;; 2 PTS
+(define (get-streetname b)
+  (cdr(car(get-address b))))
+;;no parenthesis -2 -> just cdr(car(get-address b)))
+
+
+
+#| Now implement "combine products", which accepts two businesses
+ |   and returns a list of the first business' products
+ |   followed by the second business' products.
+ | Consider cleaning this function up with a subdefinition
+ |   or external helper function.
+ | Examples:
+ |   (combine-products busn1 busn2)
+ |     -> ("Windows" "Office" "Xbox" "Bing" "Mustang" "Shelby" "Bronco" "F-150" "F-250")
+ |#
+
+;; Type signature: (combine-products business business) -> string-list
+;; 3 PTS
+(define (combine-products b1 b2)
+  (append (car (reverse b1)) (car (reverse b2))))
+
+  
+;; CS-135: Discrete Structures
+;; Written Fall 2020 by Jared Pincus
+;; Revised Spring 2022 by Franklin Shack, Isabel Hughes, Matthew Kellerman, and Matthew Turner

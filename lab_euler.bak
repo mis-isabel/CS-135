@@ -1,0 +1,258 @@
+#lang eopl
+
+#|-------------------------------------------------------------------------------
+ | Name:
+ | Pledge:
+ |-------------------------------------------------------------------------------|#
+
+
+#|-------------------------------------------------------------------------------|
+ |                       Lab 10: Eulerian Cycles (20 PTS)                        |
+ |-------------------------------------------------------------------------------|#
+
+
+#| In this lab, we'll implement a test to determine whether
+ |   an undirected graph contains an Eulerian cycle.
+ | We'll use the following terminology for datatypes in the lab:
+ | - A "natural" is an integer ≥ 0.
+ | - A "vertex" is a natural.
+ | - An "edge" is a list of two vertices.
+ |   All edges in this lab are undirected.
+ |   In other words, (1 2) and (2 1) are considered equivalent.
+ | - A "graph" is a list of edges.
+ |   All graphs in this lab are undirected.
+ |   Empty graphs ARE always valid input for any function in the lab.
+ |   You MAY assume that a graph does not contain duplicates edges,
+ |     including symmetric edges.
+ |   In other words, if (1 2) is listed as an edge of a graph,
+ |     the list of edges will not contain another instance of (1 2),
+ |     NOR will it contain any instances of (2 1).
+ |
+ | As a refresher, an Eulerian cycle is a cycle which traverses
+ |   every edge of a graph exactly once.
+ | Given an arbitrary undirected graph G,
+ |   G contains an Eulerian cycle iff it satisfies two conditions:
+ |   1. The degree of every vertex in G is even.
+ |   2. G is connected, save any vertices of degree 0.
+ |#
+
+
+;; Below are some example graphs we'll use throughout the lab for testing.
+;; You may want to draw these out to better understand what the expected outputs should be.
+
+(define C6 '((1 2) (2 3) (3 4) (4 5) (5 6) (6 1)))
+(define K4 '((4 3) (4 2) (4 1) (3 2) (3 1) (2 1)))
+(define full5 '((1 1) (1 2) (1 3) (1 4) (1 5)
+                      (2 2) (2 3) (2 4) (2 5)
+                      (3 3) (3 4) (3 5)
+                      (4 4) (4 5) (5 5)))
+(define btree '((00 10) (00 11) (10 20) (10 21) (11 22) (11 23)
+                        (20 30) (20 31) (21 32) (21 33)
+                        (22 34) (22 35) (23 36) (23 37)))
+(define triforce '((00 10) (00 11) (10 11) (10 20) (10 21)
+                           (20 21) (11 21) (11 22) (21 22)))
+(define polygons '((1 2) (2 3) (3 4) (4 1)
+                         (5 6) (6 7) (7 5)))
+(define reflex '((1 1) (2 2) (3 3)))
+(define empty '())
+
+
+
+
+#|-------------------------------------------------------------------------------|
+ |                               Helper Functions                                |
+ |-------------------------------------------------------------------------------|#
+
+;; Provided in this section are some helper functions.
+;; You MAY and should use these anywhere you want in your implementations.
+
+
+#| "remove" accepts lists L and R
+ |   and returns L filtered such that all elements of L
+ |   which are also in R have been removed.
+ |#
+;; Type signature: (remove list list) -> list
+(define (remove L R)
+  (define (recurse acc L)
+    (if (null? L) (reverse acc)
+        (recurse (if (member (car L) R)
+                     acc
+                     (cons (car L) acc))
+                 (cdr L))))
+  (recurse '() L))
+
+
+
+
+#| "usort" accepts a list of naturals L
+ |   and returns L sorted from least to greatest
+ |   with all duplicate elements removed (hence "unique-sort").
+ |#
+;; Type signature: (usort list-of-naturals) -> list-of-naturals
+(define (usort L)	
+  (define (recurse acc L)	
+    (if (null? L) acc
+        (let ([m (apply max L)])	
+          (recurse (cons m acc) (remove L (list m))))))	
+  (recurse '() L))
+
+
+
+
+#| "dfs" accepts a graph G and vertex v
+ |   and returns a list of all vertices accessible from v
+ |   via some sequence of edges in G.
+ | The returned list of vertices may be unsorted and may contain duplicates.
+ | This function requires a working implementation of the function "adjacent",
+ |   which you'll implement later.
+ |#
+;; Type signature: (dfs graph vertex) -> list-of-vertices
+(define (dfs G v)
+  (define (helper found v)
+    (define next-found (cons v found))
+    (define adj (remove (adjacent G v) next-found))
+    (define (f x) (helper next-found x))
+    (define res (apply append (map f adj)))
+    (cons v res))
+  (helper '() v))
+
+
+
+
+#|-------------------------------------------------------------------------------|
+ |                        Part 1: Condition #1 (10 PTS)                          |
+ |-------------------------------------------------------------------------------|#
+
+
+#| First, let's implement a test for whether a graph satisfies
+ |   the first condition necessary for an Eulerian cycle to exist:
+ |   is the degree of every vertex even?
+ |#
+
+
+#| Implement "get-vertices" to accept a graph G
+ |   and return a list of all unique vertices in G
+ |   sorted from least to greatest.
+ | Because we are encoding graphs as a list of edges,
+ |   this function's output will necessarily exclude
+ |   vertices of degree 0, but we'll ignore that fact
+ |   since we have no way of representing vertices of degree 0,
+ |   and they are irrelevant to Eulerian cycles.
+ | Make sure your output matches the expect output exactly -
+ |   no duplicates, and sorted from least to greatest.
+ |
+ | Examples:
+ |   (get-vertices C6)       -> (1 2 3 4 5 6)
+ |   (get-vertices K4)       -> (1 2 3 4)
+ |   (get-vertices full5)    -> (1 2 3 4 5)
+ |   (get-vertices btree)    -> (0 10 11 20 21 22 23 30 31 32 33 34 35 36 37)
+ |   (get-vertices triforce) -> (0 10 11 20 21 22)
+ |   (get-vertices polygons) -> (1 2 3 4 5 6 7)
+ |   (get-vertices reflex)   -> (1 2 3)
+ |   (get-vertices empty)    -> ()
+ |#
+
+;; Type signature: (get-vertices graph) -> list-of-vertices
+;; 3 PTS
+(define (get-vertices G)
+  "TODO: Implement")
+
+
+
+
+#| Implement "degree" to accept a graph G and a vertex v,
+ |   and return the degree of v in G.
+ | The degree of v in G is the total number of edges in G
+ |   which point into OR out of v.
+ | Reflexive edges - edges of the form (v v) - are special,
+ |   in that they add 2 to the degree of v.
+ |
+ | Again, you may assume G does not contain duplicate edges.
+ |
+ | Examples:
+ |   (degree C6 3)        -> 2
+ |   (degree C6 7)        -> 0
+ |   (degree K4 4)        -> 3
+ |   (degree full5 2)     -> 6
+ |   (degree btree 21)    -> 3
+ |   (degree triforce 10) -> 4
+ |   (degree polygons 6)  -> 2
+ |   (degree reflex 2)    -> 2
+ |   (degree empty 1)     -> 0
+ |#
+
+;; Type signature: (degree graph vertex) -> natural
+;; 4 PTS
+(define (degree G v)
+  "TODO: Implement")
+
+
+
+
+#| Implement "all-even?" to accept a graph G
+ |   and return whether all of G's vertices have even degree.
+ | Notice that "all" of the empty graph's vertices have even degree.
+ |
+ | Examples:
+ |   (all-even? C6)       -> #t
+ |   (all-even? K4)       -> #f
+ |   (all-even? full5)    -> #t
+ |   (all-even? btree)    -> #f
+ |   (all-even? triforce) -> #t
+ |   (all-even? polygons) -> #t
+ |   (all-even? reflex)   -> #t
+ |   (all-even? empty)    -> #t
+ |#
+
+;; Type signature: (all-even? graph) -> boolean
+;; 3 PTS
+(define (all-even? G)
+  "TODO: Implement")
+
+
+
+
+#|-------------------------------------------------------------------------------|
+ |                         Part 2: Condition #2 (4 PTS)                          |
+ |-------------------------------------------------------------------------------|#
+
+#| Now we'll implement a test for whether a graph satisfies
+ |   the second condition necessary for an Eulerian cycle to exist:
+ |   is the graph connected?
+ |
+ | An undirected graph is connected if a path (a sequence of edges) exists
+ |   from every vertex to every other vertex.
+ | Again, the exception we're making to this rule is to ignore
+ |   "isolated" vertices of degree 0, since they do not effect
+ |   the existence of an Eulerian cycle.
+ |#
+
+#| Implement "adjacent" to accept a graph G and vertex v
+ |   and return a list of all vertices which share an undirected edge with v.
+ | Like with "get-vertices", the output list must be sorted
+ |   from least to greatest and contain no duplicates;
+ |   thus, your output should exactly match the provided output.
+ | If you're not exactly sure what should constitute "sharing an edge",
+ |   carefully study the provided test cases and their outputs.
+ | This function will need to work correctly for the "dfs" helper function to work.
+ |
+ | Examples:
+ |   (adjacent C6 6)        -> (1 5)
+ |   (adjacent K4 1)        -> (2 3 4)
+ |   (adjacent full5 4)     -> (1 2 3 4 5)
+ |   (adjacent btree 22)    -> (11 34 35)
+ |   (adjacent triforce 11) -> (0 10 21 22)
+ |   (adjacent polygons 3)  -> (2 4)
+ |   (adjacent reflex 1)    -> (1)
+ |   (adjacent reflex 4)    -> ()
+ |   (adjacent empty 5)     -> ()
+ |#
+
+;; Type signature: (adjacent graph vertex) -> list-of-vertices
+;; 4 PTS
+(define (adjacent G v)
+  "TODO: Implement")
+
+#|
+ |See Lab 9 EC on Canvas for the rest of parts 2&3...
+ |#
